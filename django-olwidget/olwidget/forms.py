@@ -54,7 +54,7 @@ class MapModelFormMetaclass(type):
         except NameError:
             # We are defining MapModelForm itself.
             parents = None
-        declared_fields = forms.models.get_declared_fields(bases, attrs, False)
+        declared_fields = forms.forms.get_declared_fields(bases, attrs, False)
         new_class = super(MapModelFormMetaclass, mcs).__new__(mcs, name, bases,
                 attrs)
         if not parents:
