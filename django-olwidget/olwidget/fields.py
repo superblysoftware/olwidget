@@ -1,8 +1,8 @@
 from django import forms
+from django.contrib.gis.forms.fields import GeometryField
 
 from olwidget.widgets import Map, EditableLayer, InfoLayer
 
-from django.contrib.gis.forms.fields import GeometryField
 
 class MapField(forms.fields.Field):
     """
@@ -31,6 +31,7 @@ class MapField(forms.fields.Field):
         """
         return [f.clean(v) for v,f in zip(value, self.fields)]
 
+
 class EditableLayerField(GeometryField):
     """
     Equivalent to:
@@ -40,6 +41,7 @@ class EditableLayerField(GeometryField):
     def __init__(self, options=None, **kwargs):
         kwargs['widget'] = kwargs.get('widget', EditableLayer(options))
         super(EditableLayerField, self).__init__(**kwargs)
+
 
 class InfoLayerField(forms.fields.CharField):
     """

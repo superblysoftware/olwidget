@@ -4,6 +4,7 @@ import copy
 from django.template.loader import render_to_string
 from django.conf import settings
 from django import forms
+from django.utils import six
 from django.utils.safestring import mark_safe
 
 from olwidget import utils
@@ -30,7 +31,7 @@ api_defaults = {
     'OLWIDGET_CSS': utils.url_join(settings.OLWIDGET_STATIC_URL, "css/olwidget.css"),
 }
 
-for key, default in api_defaults.iteritems():
+for key, default in six.iteritems(api_defaults):
     if not hasattr(settings, key):
         setattr(settings, key, default)
 
@@ -180,6 +181,7 @@ class Map(forms.Widget):
         obj.vector_layers = copy.deepcopy(self.vector_layers)
         return obj
 
+
 class VectorLayerList(list):
     def __init__(self, *args, **kwargs):
         super(VectorLayerList, self).__init__(*args, **kwargs)
@@ -204,9 +206,9 @@ class VectorLayerList(list):
 #
 # Layer widgets
 #
-
 class BaseVectorLayer(forms.Widget):
     editable = False
+
     def prepare(self, name, value, attrs=None):
         """
         Given the name, value and attrs, prepare both html and javascript
@@ -237,6 +239,7 @@ class BaseVectorLayer(forms.Widget):
 
     def __unicode__(self):
         return self.render(None, None)
+
 
 class InfoLayer(BaseVectorLayer):
     """
@@ -276,6 +279,7 @@ class InfoLayer(BaseVectorLayer):
         html = ""
         return (js, html)
 
+
 class EditableLayer(BaseVectorLayer):
     """
     A wrapper for the javascript olwidget.EditableLayer() type.  Intended for
@@ -310,7 +314,6 @@ class EditableLayer(BaseVectorLayer):
 #
 # Convenience single layer widgets for use in non-MapField fields.
 #
-
 class BaseSingleLayerMap(Map):
     """
     Base type for single-layer maps, for convenience and backwards
@@ -320,6 +323,7 @@ class BaseSingleLayerMap(Map):
         val = super(BaseSingleLayerMap, self).value_from_datadict(
                 data, files, name)
         return val[0]
+
 
 class EditableMap(BaseSingleLayerMap):
     """
@@ -331,12 +335,14 @@ class EditableMap(BaseSingleLayerMap):
     def __init__(self, options=None, **kwargs):
         super(EditableMap, self).__init__([EditableLayer()], options, **kwargs)
         
+
 class InfoMap(BaseSingleLayerMap):
     """
     Convenience Map widget with a single info layer.
     """
     def __init__(self, info, options=None, **kwargs):
         super(InfoMap, self).__init__([InfoLayer(info)], options, **kwargs)
+
 
 class MapDisplay(EditableMap):
     """
@@ -353,4 +359,3 @@ class MapDisplay(EditableMap):
 
     def __unicode__(self):
         return self.render(None, [self.wkt])
-

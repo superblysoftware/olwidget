@@ -37,6 +37,7 @@ from olwidget.utils import DEFAULT_PROJ
 
 __all__ = ('GeoModelAdmin',)
 
+
 class GeoModelAdmin(ModelAdmin):
     options = None
     map_template = "olwidget/admin_olwidget.html"

@@ -1,11 +1,13 @@
 from django import forms
 from django.contrib.gis.forms.fields import GeometryField
+from django.utils import six
 
 from olwidget.widgets import Map, BaseVectorLayer, EditableLayer
 from olwidget.fields import MapField
 from olwidget import utils
 
 __all__ = ('MapModelForm', )
+
 
 class BaseMapModelForm(forms.models.BaseModelForm):
     """
@@ -31,6 +33,7 @@ class BaseMapModelForm(forms.models.BaseModelForm):
         fix_cleaned_data(self.cleaned_data, self.initial_data_keymap)
         return self.cleaned_data
 
+
 class MapModelFormOptions(forms.models.ModelFormOptions):
     def __init__(self, options=None):
         super(MapModelFormOptions, self).__init__(options)
@@ -39,6 +42,7 @@ class MapModelFormOptions(forms.models.ModelFormOptions):
             self.maps = getattr(options, 'options', None)
         self.default_field_class = getattr(options, 'default_field_class', None)
         self.template = getattr(options, 'template', None)
+
 
 class MapModelFormMetaclass(type):
     """ 
@@ -86,8 +90,10 @@ class MapModelFormMetaclass(type):
         new_class.base_fields = fields
         return new_class
 
+
 class MapModelForm(BaseMapModelForm):
     __metaclass__ = MapModelFormMetaclass
+
 
 def fix_initial_data(initial, initial_data_keymap):
     """ 
@@ -101,13 +107,14 @@ def fix_initial_data(initial, initial_data_keymap):
     Used for rearranging initial data in fields to match declared maps.
     """
     if initial:
-        for dest, sources in initial_data_keymap.iteritems():
+        for dest, sources in six.iteritems(initial_data_keymap):
             data = [initial.pop(s, None) for s in sources]
             initial[dest] = data
     return initial
 
+
 def fix_cleaned_data(cleaned_data, initial_data_keymap):
-    for group, keys in initial_data_keymap.iteritems():
+    for group, keys in six.iteritems(initial_data_keymap):
         if cleaned_data.has_key(group):
             vals = cleaned_data.pop(group)
             if isinstance(vals, (list, tuple)):
@@ -116,6 +123,7 @@ def fix_cleaned_data(cleaned_data, initial_data_keymap):
             else:
                 cleaned_data[keys[0]] = vals
     return cleaned_data
+
 
 def apply_maps_to_modelform_fields(fields, maps, default_options=None, 
                                    default_template=None, default_field_class=None):
@@ -126,7 +134,7 @@ def apply_maps_to_modelform_fields(fields, maps, default_options=None,
     """
     if default_field_class is None:
         default_field_class = MapField
-    map_field_names = (name for name,field in fields.iteritems() if isinstance(field, (MapField, GeometryField)))
+    map_field_names = (name for name, field in six.iteritems(fields) if isinstance(field, (MapField, GeometryField)))
     if not maps:
         maps = [((name,),) for name in map_field_names]
     elif isinstance(maps, dict):
@@ -149,7 +157,7 @@ def apply_maps_to_modelform_fields(fields, maps, default_options=None,
         map_name = "_".join(field_list)
         layer_fields = []
         names = []
-        min_pos = 65535 # arbitrarily high number for field ordering
+        min_pos = 65535  # arbitrarily high number for field ordering
         initial = []
         for field_name in field_list:
             min_pos = min(min_pos, fields.keyOrder.index(field_name))
@@ -173,4 +181,3 @@ def apply_maps_to_modelform_fields(fields, maps, default_options=None,
         fields.insert(min_pos, map_name, map_field)
         initial_data_keymap[map_name] = initial
     return initial_data_keymap
-
