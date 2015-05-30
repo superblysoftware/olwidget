@@ -29,7 +29,7 @@ A complete list of options is in the olwidget documentation.
 from django.contrib.admin import ModelAdmin
 from django.contrib.gis.geos import GeometryCollection
 from django.contrib.admin.options import csrf_protect_m
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 
 from olwidget.forms import apply_maps_to_modelform_fields, fix_initial_data, fix_cleaned_data
 from olwidget.widgets import InfoMap
@@ -106,7 +106,7 @@ class GeoModelAdmin(ModelAdmin):
                         GeometryCollection(geoms, srid=int(DEFAULT_PROJ)),
                         "<a href='%s'>%s</a>" % (
                             cl.url_for_result(obj),
-                            force_unicode(obj)
+                            force_text(obj)
                         )
                     ))
 
