@@ -14,7 +14,8 @@ VERSION = '0.61.0'
 for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
 
-setup(name='django-olwidget',
+setup(
+    name='django-olwidget',
     version=VERSION,
     description="OpenLayers mapping widget for Django",
     author='Charlie DeTar',

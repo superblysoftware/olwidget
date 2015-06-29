@@ -47,32 +47,32 @@ class MapModelFormOptions(forms.models.ModelFormOptions):
 class MapModelFormMetaclass(type):
     """ 
     Metaclass for map-containing ModelForm widgets.  The implementation is
-    mostly copied from django's ModelFormMetaclass, but we change the
+    mostly copied from Django's ModelFormMetaclass, but we change the
     hard-coded parent class name and add our map field processing parts.
     """
     def __new__(mcs, name, bases, attrs):
-        formfield_callback = attrs.pop('formfield_callback',
-                lambda f, **kwargs: f.formfield(**kwargs))
+        formfield_callback = attrs.pop(
+            'formfield_callback', lambda f, **kwargs: f.formfield(**kwargs))
         try:
             parents = [b for b in bases if issubclass(b, MapModelForm)]
         except NameError:
             # We are defining MapModelForm itself.
             parents = None
         declared_fields = forms.forms.get_declared_fields(bases, attrs, False)
-        new_class = super(MapModelFormMetaclass, mcs).__new__(mcs, name, bases,
-                attrs)
+        new_class = super(MapModelFormMetaclass, mcs).__new__(
+            mcs, name, bases, attrs)
         if not parents:
             return new_class
 
         if 'media' not in attrs:
             new_class.media = forms.widgets.media_property(new_class)
         opts = new_class._meta = MapModelFormOptions(
-                getattr(new_class, 'Meta', None))
+            getattr(new_class, 'Meta', None))
         if opts.model:
             # If a model is defined, extract form fields from it.
-            fields = forms.models.fields_for_model(opts.model, opts.fields,
-                                      opts.exclude, opts.widgets, 
-                                      formfield_callback)
+            fields = forms.models.fields_for_model(
+                opts.model, opts.fields, opts.exclude, opts.widgets,
+                formfield_callback)
 
             # Override default model fields with any custom declared ones
             # (plus, include all the other declared fields).
@@ -82,8 +82,8 @@ class MapModelFormMetaclass(type):
 
         # Transform base fields by extracting types mentioned in 'maps'
         initial_data_keymap = apply_maps_to_modelform_fields(
-                fields, opts.maps, default_field_class=opts.default_field_class,
-                default_template=opts.template)
+            fields, opts.maps, default_field_class=opts.default_field_class,
+            default_template=opts.template)
 
         new_class.initial_data_keymap = initial_data_keymap
         new_class.declared_fields = declared_fields
@@ -115,7 +115,7 @@ def fix_initial_data(initial, initial_data_keymap):
 
 def fix_cleaned_data(cleaned_data, initial_data_keymap):
     for group, keys in six.iteritems(initial_data_keymap):
-        if cleaned_data.has_key(group):
+        if group in cleaned_data:
             vals = cleaned_data.pop(group)
             if isinstance(vals, (list, tuple)):
                 for key, val in zip(keys, vals):
@@ -126,15 +126,15 @@ def fix_cleaned_data(cleaned_data, initial_data_keymap):
 
 
 def apply_maps_to_modelform_fields(fields, maps, default_options=None, 
-                                   default_template=None, default_field_class=None):
+                                   default_template=None, default_field_class=MapField):
     """
     Rearranges fields to match those defined in ``maps``.  ``maps`` is a list
     of [field_list, options_dict] pairs.  For each pair, a new map field is
-    created that contans all the fields in ``field_list``.
+    created that contains all the fields in ``field_list``.
     """
-    if default_field_class is None:
-        default_field_class = MapField
-    map_field_names = (name for name, field in six.iteritems(fields) if isinstance(field, (MapField, GeometryField)))
+    field_keys = tuple(six.iterkeys(fields))
+    map_field_names = (name for name, field in six.iteritems(fields)
+                       if isinstance(field, (MapField, GeometryField)))
     if not maps:
         maps = [((name,),) for name in map_field_names]
     elif isinstance(maps, dict):
@@ -160,12 +160,12 @@ def apply_maps_to_modelform_fields(fields, maps, default_options=None,
         min_pos = 65535  # arbitrarily high number for field ordering
         initial = []
         for field_name in field_list:
-            min_pos = min(min_pos, fields.keyOrder.index(field_name))
+            min_pos = min(min_pos, field_keys.index(field_name))
             field = fields.pop(field_name)
             initial.append(field_name)
             if not isinstance(field.widget, (Map, BaseVectorLayer)):
                 field.widget = EditableLayer(
-                        options=utils.options_for_field(field))
+                    options=utils.options_for_field(field))
             layer_fields.append(field)
             names.append(field_name)
 
@@ -175,9 +175,10 @@ def apply_maps_to_modelform_fields(fields, maps, default_options=None,
             map_opts = {}
             map_opts.update(default_options)
             map_opts.update(options or {})
-            map_field = default_field_class(layer_fields, map_opts, layer_names=names,
-                label=", ".join(forms.forms.pretty_name(f) for f in field_list),
-                template=template)
+            map_field = default_field_class(
+                layer_fields, map_opts, layer_names=names, label=', '.join(
+                    forms.forms.pretty_name(f) for f in field_list
+                ), template=template)
         fields.insert(min_pos, map_name, map_field)
         initial_data_keymap[map_name] = initial
     return initial_data_keymap
