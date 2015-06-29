@@ -14,22 +14,22 @@ class MapField(forms.fields.Field):
         MapField([EditableLayerField(), InfoLayerField()], options={...})
 
     """
-    def __init__(self, fields=None, options=None, layer_names=None, 
-            template=None, **kwargs):
+    def __init__(self, fields=None, options=None, layer_names=None,
+                 template=None, **kwargs):
         # create map widget enclosing vector layers and options
         if not fields:
             fields = [EditableLayerField()]
         layers = [field.widget for field in fields]
         self.fields = fields
-        kwargs['widget'] = kwargs.get('widget', 
-                Map(layers, options, template, layer_names))
+        kwargs['widget'] = kwargs.get(
+            'widget', Map(layers, options, template, layer_names))
         super(MapField, self).__init__(**kwargs)
 
     def clean(self, value):
         """
         Return an array with the value from each layer.
         """
-        return [f.clean(v) for v,f in zip(value, self.fields)]
+        return [f.clean(v) for v, f in zip(value, self.fields)]
 
 
 class EditableLayerField(GeometryField):

@@ -50,7 +50,7 @@ class Map(forms.Widget):
     default_template = 'olwidget/multi_layer_map.html'
 
     def __init__(self, vector_layers=None, options=None, template=None,
-            layer_names=None):
+                 layer_names=None):
         self.vector_layers = VectorLayerList()
         for layer in vector_layers:
             self.vector_layers.append(layer)

@@ -126,12 +126,14 @@ def fix_cleaned_data(cleaned_data, initial_data_keymap):
 
 
 def apply_maps_to_modelform_fields(fields, maps, default_options=None, 
-                                   default_template=None, default_field_class=MapField):
+                                   default_template=None, default_field_class=None):
     """
     Rearranges fields to match those defined in ``maps``.  ``maps`` is a list
     of [field_list, options_dict] pairs.  For each pair, a new map field is
     created that contains all the fields in ``field_list``.
     """
+    if default_field_class is None:
+        default_field_class = MapField
     field_keys = tuple(six.iterkeys(fields))
     map_field_names = (name for name, field in six.iteritems(fields)
                        if isinstance(field, (MapField, GeometryField)))
