@@ -1,9 +1,10 @@
-import json
 import copy
+import json
 
-from django.template.loader import render_to_string
-from django.conf import settings
 from django import forms
+from django.conf import settings
+from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.template.loader import render_to_string
 from django.utils import six
 from django.utils.safestring import mark_safe
 
@@ -11,24 +12,18 @@ from olwidget import utils
 
 # Default settings for paths and API URLs.  These can all be overridden by
 # specifying a value in settings.py
-
-setattr(settings, "OLWIDGET_STATIC_URL",
-    getattr(settings,
-        "OLWIDGET_STATIC_URL",
-        utils.url_join(settings.STATIC_URL, "olwidget")))
-
 api_defaults = {
-    'GOOGLE_API_KEY': "",
-    'YAHOO_APP_ID': "",
-    'CLOUDMADE_API_KEY': "",
-    'GOOGLE_API': "//maps.google.com/maps/api/js?v=3&sensor=false",
-    'YAHOO_API': "http://api.maps.yahoo.com/ajaxymap?v=3.0",
-    'OSM_API': "//openstreetmap.org/openlayers/OpenStreetMap.js",
-    'OL_API': "http://openlayers.org/api/2.11/OpenLayers.js",
-    'MS_VE_API' : "//ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=6.2&s=1",
-    'CLOUDMADE_API': utils.url_join(settings.OLWIDGET_STATIC_URL, "js/cloudmade.js"),
-    'OLWIDGET_JS': utils.url_join(settings.OLWIDGET_STATIC_URL, "js/olwidget.js"),
-    'OLWIDGET_CSS': utils.url_join(settings.OLWIDGET_STATIC_URL, "css/olwidget.css"),
+    'GOOGLE_API_KEY': '',
+    'YAHOO_APP_ID': '',
+    'CLOUDMADE_API_KEY': '',
+    'GOOGLE_API': '//maps.google.com/maps/api/js?v=3&sensor=false',
+    'YAHOO_API': 'http://api.maps.yahoo.com/ajaxymap?v=3.0',
+    'OSM_API': '//openstreetmap.org/openlayers/OpenStreetMap.js',
+    'OL_API': 'http://openlayers.org/api/2.11/OpenLayers.js',
+    'MS_VE_API': '//ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=6.2&s=1',
+    'CLOUDMADE_API': static('olwidget/js/cloudmade.js'),
+    'OLWIDGET_JS': static('olwidget/js/olwidget.js'),
+    'OLWIDGET_CSS': static('olwidget/css/olwidget.css'),
 }
 
 for key, default in six.iteritems(api_defaults):
@@ -39,14 +34,12 @@ for key, default in six.iteritems(api_defaults):
 #
 # Map widget
 #
-
 class Map(forms.Widget):
     """
     ``Map`` is a container widget for layers.  The constructor takes a list of
     vector layer instances, a dictionary of options for the map, a template
     to customize rendering, and a list of names for the layer fields.
     """
-
     default_template = 'olwidget/multi_layer_map.html'
 
     def __init__(self, vector_layers=None, options=None, template=None,
@@ -73,7 +66,7 @@ class Map(forms.Widget):
         attrs = attrs or {}
         # Get an arbitrary unique ID if we weren't handed one (e.g. widget used
         # outside of a form).
-        map_id = attrs.get('id', "id_%s" % id(self))
+        map_id = attrs.get('id', 'id_%s' % id(self))
 
         layer_js = []
         layer_html = []
@@ -86,9 +79,9 @@ class Map(forms.Widget):
             else:
                 value = None
             lyr_name = layer_names[i]
-            id_ = "%s_%s" % (map_id, lyr_name)
+            id_ = '%s_%s' % (map_id, lyr_name)
             # Use "prepare" rather than "render" to get both js and html
-            (js, html) = layer.prepare(lyr_name, value, attrs={'id': id_ })
+            (js, html) = layer.prepare(lyr_name, value, attrs={'id': id_})
             layer_js.append(js)
             layer_html.append(html)
 
@@ -117,13 +110,16 @@ class Map(forms.Widget):
 
     def value_from_datadict(self, data, files, name):
         """ Return an array of all layers' values. """
-        return [vl.value_from_datadict(data, files, lyr_name) for vl, lyr_name in zip(self.vector_layers, self._get_layer_names(name))]
+        return [
+            vl.value_from_datadict(data, files, lyr_name)
+            for vl, lyr_name
+            in zip(self.vector_layers, self._get_layer_names(name))]
 
     def _custom_layer_types_js(self):
-        layer_types_js = ""
+        layer_types_js = ''
         for typename in self.custom_layer_types:
             js_def = self.custom_layer_types[typename]
-            layer_types_js += "olwidget.%s = {map: function() { return new %s }};" % (typename, js_def)
+            layer_types_js += 'olwidget.%s = {map: function() { return new %s }};' % (typename, js_def)
         return layer_types_js
 
     def _get_layer_names(self, name):
@@ -139,9 +135,9 @@ class Map(forms.Widget):
         self.layer_names = []
         for i,layer in enumerate(self.vector_layers):
             if singleton and layer.editable:
-                self.layer_names.append("%s" % name)
+                self.layer_names.append('%s' % name)
             else:
-                self.layer_names.append("%s_%i" % (name, i))
+                self.layer_names.append('%s_%i' % (name, i))
         return self.layer_names
 
     def _has_changed(self, initial, data):
@@ -156,19 +152,19 @@ class Map(forms.Widget):
         js = set()
         # collect scripts necessary for various base layers
         for layer in self.options['layers']:
-            if layer.startswith("osm."):
+            if layer.startswith('osm.'):
                 js.add(settings.OSM_API)
-            elif layer.startswith("google."):
+            elif layer.startswith('google.'):
                 GOOGLE_API_URL = settings.GOOGLE_API
                 if settings.GOOGLE_API_KEY:
-                    GOOGLE_API_URL += "&key=%s" % settings.GOOGLE_API_KEY
+                    GOOGLE_API_URL += '&key=%s' % settings.GOOGLE_API_KEY
                 js.add(GOOGLE_API_URL)
-            elif layer.startswith("yahoo."):
-                js.add(settings.YAHOO_API + "&appid=%s" % settings.YAHOO_APP_ID)
-            elif layer.startswith("ve."):
+            elif layer.startswith('yahoo.'):
+                js.add(settings.YAHOO_API + '&appid=%s' % settings.YAHOO_APP_ID)
+            elif layer.startswith('ve.'):
                 js.add(settings.MS_VE_API)
-            elif layer.startswith("cloudmade."):
-                js.add(settings.CLOUDMADE_API + "#" + settings.CLOUDMADE_API_KEY)
+            elif layer.startswith('cloudmade.'):
+                js.add(settings.CLOUDMADE_API + '#' + settings.CLOUDMADE_API_KEY)
         js = [settings.OL_API, settings.OLWIDGET_JS] + list(js)
         return forms.Media(css={'all': (settings.OLWIDGET_CSS,)}, js=js)
     media = property(_media)
@@ -189,12 +185,12 @@ class VectorLayerList(list):
 
     def append(self, obj):
         super(VectorLayerList, self).append(obj)
-        if getattr(obj, "editable", False):
+        if getattr(obj, 'editable', False):
             self.editable.append(obj)
 
     def remove(self, obj):
         super(VectorLayerList, self).remove(obj)
-        if getattr(obj, "editable", False):
+        if getattr(obj, 'editable', False):
             self.editable.remove(obj)
 
     def __deepcopy__(self, memo):
@@ -226,7 +222,8 @@ class BaseVectorLayer(forms.Widget):
         return javascript
 
     def get_extra_context(self):
-        """Hook that subclasses can override to add extra data for use
+        """
+        Hook that subclasses can override to add extra data for use
         by the javascript in self.template. This should be invoked by
         self.prepare().
 
@@ -243,7 +240,7 @@ class BaseVectorLayer(forms.Widget):
 
 class InfoLayer(BaseVectorLayer):
     """
-    A wrapper for the javscript olwidget.InfoLayer() type.  Takes an an array
+    A wrapper for the javascript olwidget.InfoLayer() type.  Takes an an array
     [geometry, html] pairs, where the html will be the contents of a popup
     displayed over the geometry, and an optional options dict.  Intended for
     use as a sub-widget for a ``Map`` widget.
@@ -266,7 +263,7 @@ class InfoLayer(BaseVectorLayer):
                 wkt_array.append([wkt, attr])
         info_json = json.dumps(wkt_array)
 
-        if name and not self.options.has_key('name'):
+        if name and 'name' not in self.options:
             self.options['name'] = forms.forms.pretty_name(name)
 
         context = {
@@ -276,7 +273,7 @@ class InfoLayer(BaseVectorLayer):
         }
         context.update(self.get_extra_context())
         js = mark_safe(render_to_string(self.template, context))
-        html = ""
+        html = ''
         return (js, html)
 
 
@@ -285,7 +282,7 @@ class EditableLayer(BaseVectorLayer):
     A wrapper for the javascript olwidget.EditableLayer() type.  Intended for
     use as a sub-widget for the Map widget.
     """
-    default_template = "olwidget/editable_layer.html"
+    default_template = 'olwidget/editable_layer.html'
     editable = True
 
     def __init__(self, options=None, template=None):
@@ -296,9 +293,9 @@ class EditableLayer(BaseVectorLayer):
     def prepare(self, name, value, attrs=None):
         if not attrs:
             attrs = {}
-        if name and not self.options.has_key('name'):
+        if name and 'name' not in self.options:
             self.options['name'] = forms.forms.pretty_name(name)
-        attrs['id'] = attrs.get('id', "id_%s" % id(self))
+        attrs['id'] = attrs.get('id', 'id_%s' % id(self))
 
         wkt = utils.get_ewkt(value)
         context = {
@@ -311,6 +308,7 @@ class EditableLayer(BaseVectorLayer):
         html = mark_safe(forms.Textarea().render(name, wkt, attrs))
         return (js, html)
 
+
 #
 # Convenience single layer widgets for use in non-MapField fields.
 #
@@ -321,7 +319,7 @@ class BaseSingleLayerMap(Map):
     """
     def value_from_datadict(self, data, files, name):
         val = super(BaseSingleLayerMap, self).value_from_datadict(
-                data, files, name)
+            data, files, name)
         return val[0]
 
 
@@ -352,10 +350,7 @@ class MapDisplay(EditableMap):
         options = utils.get_options(options)
         options['editable'] = False
         super(MapDisplay, self).__init__(options, **kwargs)
-        if fields:
-            self.wkt = utils.collection_ewkt(fields)
-        else:
-            self.wkt = ""
+        self.wkt = utils.collection_ewkt(fields) if fields else ''
 
     def __unicode__(self):
         return self.render(None, [self.wkt])
