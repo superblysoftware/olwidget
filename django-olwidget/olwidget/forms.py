@@ -128,59 +128,63 @@ def fix_cleaned_data(cleaned_data, initial_data_keymap):
 def apply_maps_to_modelform_fields(fields, maps, default_options=None, 
                                    default_template=None, default_field_class=None):
     """
-    Rearranges fields to match those defined in ``maps``.  ``maps`` is a list
+    Rearranges fields to match those defined in ``maps``. ``maps`` is a list
     of [field_list, options_dict] pairs.  For each pair, a new map field is
     created that contains all the fields in ``field_list``.
     """
     if default_field_class is None:
         default_field_class = MapField
-    field_keys = tuple(six.iterkeys(fields))
     map_field_names = (name for name, field in six.iteritems(fields)
                        if isinstance(field, (MapField, GeometryField)))
     if not maps:
         maps = [((name,),) for name in map_field_names]
     elif isinstance(maps, dict):
-        maps = [[tuple(map_field_names), maps]]
+        maps = [(map_field_names, maps)]
 
     default_options = utils.get_options(default_options)
     initial_data_keymap = {}
 
     for map_definition in maps:
         field_list = map_definition[0]
+        options = {}
+        template = default_template
+
         if len(map_definition) > 1:
             options = map_definition[1]
-        else:
-            options = {}
         if len(map_definition) > 2:
             template = map_definition[2]
-        else:
-            template = default_template
         
-        map_name = "_".join(field_list)
+        map_name = '_'.join(field_list)
+        field = None
         layer_fields = []
-        names = []
-        min_pos = 65535  # arbitrarily high number for field ordering
-        initial = []
-        for field_name in field_list:
-            min_pos = min(min_pos, field_keys.index(field_name))
-            field = fields.pop(field_name)
-            initial.append(field_name)
-            if not isinstance(field.widget, (Map, BaseVectorLayer)):
-                field.widget = EditableLayer(
-                    options=utils.options_for_field(field))
-            layer_fields.append(field)
-            names.append(field_name)
+        move_to_end = False
+        initial_data_keymap[map_name] = []
+
+        for field_name in six.iterkeys(fields):
+            if field_name in field_list:
+                field = fields.pop(field_name)
+                initial_data_keymap[map_name].append(field_name)
+
+                if not isinstance(field.widget, (Map, BaseVectorLayer)):
+                    field.widget = EditableLayer(options=utils.options_for_field(field))
+                layer_fields.append(field)
+
+                # Placeholder
+                fields.setdefault(map_name)
+
+                # Don't start moving to the end until the first pop
+                move_to_end = True
+            elif move_to_end:
+                fields.move_to_end(field_name)
 
         if isinstance(field, MapField):
-            map_field = field
+            fields[map_name] = field
         else:
             map_opts = {}
             map_opts.update(default_options)
             map_opts.update(options or {})
-            map_field = default_field_class(
-                layer_fields, map_opts, layer_names=names, label=', '.join(
-                    forms.forms.pretty_name(f) for f in field_list
+            fields[map_name] = default_field_class(
+                layer_fields, map_opts, layer_names=field_list, label=', '.join(
+                    map(forms.forms.pretty_name, field_list)
                 ), template=template)
-        fields.insert(min_pos, map_name, map_field)
-        initial_data_keymap[map_name] = initial
     return initial_data_keymap
