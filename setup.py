@@ -24,7 +24,13 @@ setup(
     packages=['olwidget'],
     package_dir={'': 'django-olwidget'},
     package_data={
-        'olwidget': ['static/*', 'templates/*'],
+        'olwidget': [
+            'static/olwidget/css/*',
+            'static/olwidget/img/*',
+            'static/olwidget/js/*',
+            'templates/admin/*',
+            'templates/olwidget/*'
+        ],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
