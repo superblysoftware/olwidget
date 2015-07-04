@@ -23,30 +23,9 @@ setup(
     url='http://olwidget.org',
     packages=['olwidget'],
     package_dir={'': 'django-olwidget'},
-    data_files=[
-        ('olwidget/templates/olwidget', [
-            'django-olwidget/olwidget/templates/olwidget/admin_olwidget.html',
-            'django-olwidget/olwidget/templates/olwidget/editable_layer.html',
-            'django-olwidget/olwidget/templates/olwidget/multi_layer_map.html',
-            'django-olwidget/olwidget/templates/olwidget/info_layer.html',
-            'django-olwidget/olwidget/templates/olwidget/test_map_template.html',
-        ]),
-        ('olwidget/static/olwidget/css', [
-            'css/olwidget.css'
-        ]),
-        ('olwidget/static/olwidget/js', [
-            'js/olwidget.js',
-            'js/cloudmade.js',
-        ]),
-        ('olwidget/static/olwidget/img', [
-            'img/extra_edit_icons.png',
-            'img/jquery_ui_license.txt',
-            'img/popup_icons.png',
-        ]),
-        ('olwidget/templates/admin', [
-            'django-olwidget/olwidget/templates/admin/olwidget_change_list.html'
-        ]),
-    ],
+    package_data={
+        'olwidget': ['static/*', 'templates/*'],
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
@@ -55,7 +34,13 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: JavaScript',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
 )
